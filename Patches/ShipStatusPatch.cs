@@ -51,6 +51,9 @@ class RepairSystemPatch
 
         if (Options.DisableCloseDoor.GetBool() && systemType == SystemTypes.Doors) return false;
 
+        if (systemType == SystemTypes.Doors && AmongUsClient.Instance.NetworkMode != NetworkModes.FreePlay)
+            Main.tempPlayerDoorClosed = player;
+
         //Note: "SystemTypes.Laboratory" сauses bugs in the Host, it is better not to use
         if (player.Is(CustomRoles.Fool) && 
             (systemType is
@@ -166,7 +169,40 @@ class CloseDoorsPatch
 {
     public static bool Prefix(ShipStatus __instance)
     {
-        return !(Options.DisableSabotage.GetBool());
+        if (Options.DisableSabotage.GetBool())
+            return false;
+
+        var player = PlayerControl.LocalPlayer;
+
+        Logger.Info(player.PlayerId.ToString(), "Door Closed");
+
+        if (player == null)
+        {
+            return false;
+        }
+
+        if (player.Is(CustomRoles.Glitch))
+        {
+            Glitch.Mimic(player);
+            return false;
+        }
+
+        if (player.Is(CustomRoleTypes.Impostor)
+            || player.Is(CustomRoles.Parasite)
+            || player.Is(CustomRoles.Refugee)
+            || (player.Is(CustomRoles.Bandit) && Bandit.CanUseSabotage.GetBool())
+            || (player.Is(CustomRoles.Jackal) && Jackal.CanUseSabotage.GetBool())
+            || (player.Is(CustomRoles.Sidekick) && Jackal.CanUseSabotageSK.GetBool())
+            || (player.Is(CustomRoles.Traitor) && Traitor.CanUseSabotage.GetBool()))
+        {
+            Logger.Info(player.GetCustomRole().ToString() + " - " + player.GetRealName(), "Door Closed By");
+            return true;
+        }
+        else
+        {
+            Logger.Info(player.GetCustomRole().ToString() + " - " + player.GetRealName(), "Tried To Close The Door");
+            return false;
+        }
     }
 }
 [HarmonyPatch(typeof(SwitchSystem), nameof(SwitchSystem.RepairDamage))]

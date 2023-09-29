@@ -224,7 +224,8 @@ public class Main : BasePlugin
     public static Dictionary<byte, List<string>> AwareInteracted = new();
     public static byte ShamanTarget = byte.MaxValue;
     public static bool ShamanTargetChoosen = false;
-    
+    public static PlayerControl tempPlayerDoorClosed;
+
 
 
     public static IEnumerable<PlayerControl> AllPlayerControls => PlayerControl.AllPlayerControls.ToArray().Where(p => p != null);
